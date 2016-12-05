@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sunshine</title>
+    <style media="screen">
+      body {margin: 0; background: #fff}
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+
+      var canvas = document.createElement('canvas')
+      document.body.appendChild(canvas)
+
+      var ctx = canvas.getContext('2d')
+
+      var ratio, w, h, min, r
+
+      var gradient
+
+      function size(){
+        ratio = window.devicePixelRatio || 1
+
+        w = canvas.width = window.innerWidth * ratio
+        h = canvas.height = window.innerHeight * ratio
+        canvas.style.width = window.innerWidth + 'px'
+
+        min = Math.min(w,h)
+
+        // earth radius
+        r = min/3
+
+        gradient = ctx.createLinearGradient(0,0,w,0);
+        gradient.addColorStop(0.5,"#ffff00");
+        gradient.addColorStop(1,"#fff");
+      }
+
+      size()
+
+
+
+      function drawSunlight(height, position) {
+
+        var ray_h = height * r * 2
+        var ray_y = (position - .5) * (1 - height) * r * 2 + h/2
+
+        // intersect angles
+        var a = (ray_y - h/2 - ray_h/2) / r
+        var b = (ray_y - h/2 + ray_h/2) / r
+
+        var aa = Math.asin(a)
+        var ab = Math.asin(b)
+
+        ctx.clearRect(0,0,w,h)
+        ctx.lineWidth = 1
+
+        // ray
+        ctx.fillStyle = gradient
+        ctx.fillRect(w/2,ray_y-ray_h/2,w/2,ray_h)
+
+
+        // globe
+        ctx.strokeStyle = '#aaa'
+        ctx.fillStyle = '#fff'
+        ctx.beginPath()
+        ctx.arc(w/2, h/2, r, 0, Math.PI*2)
+        ctx.stroke()
+        ctx.fill()
+
+        // lit area
+        ctx.strokeStyle = rb(Math.abs((position-.5)*2))
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.arc(w/2, h/2, r, aa, ab)
+        ctx.stroke()
+
+      }
+
+
+      drawSunlight(.1, .5)
+
+      // interpolate red blue
+      function rb(f) {
+        var v = ~~(f*255)
+        return 'rgba('+ (255 - v) +', 0, '+ v +', 0.7)'
+      }
+
+
+      // hook up to mouse
+      var will_render = false
+      var clientY = 0
+
+      function render(){
+        will_render = false
+
+        var y = clientY * ratio
+
+        var d = r * 2
+
+        var o = (h - d) / 2
+        var y = (y - o) / d
+
+        y = y < .0001 ? .0001 :
+            y > .9999 ? .9999 :
+            y
+
+        drawSunlight(.1, y)
+      }
+
+      canvas.addEventListener('mousemove', function(e){
+
+        clientY = e.clientY
+
+        if(!will_render) {
+          will_render = true
+          requestAnimationFrame(render)
+        }
+      })
+
+
+      window.addEventListener('resize', function(){
+
+        size()
+
+        if(!will_render) {
+          will_render = true
+          requestAnimationFrame(render)
+        }
+
+      })
+
+    </script>
+  </body>
+</html>
